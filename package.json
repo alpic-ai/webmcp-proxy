@@ -1,0 +1,25 @@
+{
+  "name": "webmcp-proxy",
+  "version": "0.0.1",
+  "description": "Integrate your existing MCP server on your website for browsing agent",
+  "keywords": [
+    "webmcp",
+    "mcp",
+    "proxy"
+  ],
+  "homepage": "https://github.com/alpic-ai/webmcp-proxy#readme",
+  "bugs": {
+    "url": "https://github.com/alpic-ai/webmcp-proxy/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alpic-ai/webmcp-proxy.git"
+  },
+  "license": "ISC",
+  "author": "Frédéric Barthelet",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  }
+}
