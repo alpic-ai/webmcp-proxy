@@ -1,11 +1,12 @@
 {
   "name": "webmcp-proxy",
   "version": "0.0.1",
-  "description": "Integrate your existing MCP server on your website for browsing agent",
+  "description": "Proxy tools from a remote MCP server to the browser via WebMCP",
   "keywords": [
     "webmcp",
     "mcp",
-    "proxy"
+    "proxy",
+    "agent"
   ],
   "homepage": "https://github.com/alpic-ai/webmcp-proxy#readme",
   "bugs": {
@@ -17,9 +18,50 @@
   },
   "license": "ISC",
   "author": "Frédéric Barthelet",
-  "type": "commonjs",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "default": "./dist/vue.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "rm -rf dist && tsc",
     "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "react": "^19",
+    "typescript": "^5",
+    "vue": "^3"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "vue": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "packageManager": "pnpm@10.30.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
   }
 }
