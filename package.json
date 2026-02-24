@@ -1,6 +1,6 @@
 {
   "name": "webmcp-proxy",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Proxy tools from a remote MCP server to the browser via WebMCP",
   "keywords": [
     "webmcp",
@@ -40,6 +40,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc",
+    "demo": "pnpm --filter webmcp-proxy-demo dev",
     "test": "vitest"
   },
   "devDependencies": {
