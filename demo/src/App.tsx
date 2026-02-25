@@ -15,7 +15,9 @@ export function App() {
       e.preventDefault();
       const trimmed = url.trim();
       if (!trimmed) return;
-      setActiveUrl(`/cors-proxy/${encodeURIComponent(trimmed)}`);
+      setActiveUrl(
+        `${window.location.origin}/cors-proxy/${encodeURIComponent(trimmed)}`,
+      );
       setStatus("connecting");
       setTools([]);
       setError(null);
