@@ -1,0 +1,6 @@
+[build]
+  command = "pnpm add webmcp-proxy@latest && pnpm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"
