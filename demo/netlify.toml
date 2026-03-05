@@ -4,3 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "24"
+
+[[edge_functions]]
+  function = "cors-proxy"
+  path = "/cors-proxy/*"
