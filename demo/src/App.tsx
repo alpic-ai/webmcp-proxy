@@ -45,7 +45,10 @@ export function App() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>WebMCP Proxy</h1>
+        <div style={styles.header}>
+          <span style={styles.badge}>DEMO</span>
+          <h1 style={styles.title}>WebMCP Proxy</h1>
+        </div>
         <p style={styles.subtitle}>
           Connect to a remote MCP server and register its tools with the
           browser's WebMCP API.
@@ -53,7 +56,7 @@ export function App() {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label htmlFor="server-url" style={styles.label}>
-            MCP Server URL
+            MCP SERVER URL
           </label>
           <div style={styles.inputRow}>
             <input
@@ -97,15 +100,15 @@ export function App() {
                 status === "connected"
                   ? "#22c55e"
                   : status === "connecting"
-                    ? "#f59e0b"
+                    ? "#fff"
                     : status === "error"
                       ? "#ef4444"
-                      : "#94a3b8",
+                      : "#555",
             }}
           />
           <span style={styles.statusText}>
             {status === "idle" && "Not connected"}
-            {status === "connecting" && "Connecting..."}
+            {status === "connecting" && "Connecting\u2026"}
             {status === "connected" &&
               `Connected \u2014 ${tools.length} tool${tools.length !== 1 ? "s" : ""} registered`}
             {status === "error" && `Error: ${error}`}
@@ -114,7 +117,7 @@ export function App() {
 
         {tools.length > 0 && (
           <div style={styles.toolList}>
-            <h2 style={styles.toolListTitle}>Registered Tools</h2>
+            <h2 style={styles.toolListTitle}>REGISTERED TOOLS</h2>
             {tools.map((tool) => (
               <div key={tool.name} style={styles.toolCard}>
                 <code style={styles.toolName}>{tool.name}</code>
@@ -126,6 +129,15 @@ export function App() {
           </div>
         )}
       </div>
+
+      <a
+        href="https://alpic.ai"
+        target="_blank"
+        rel="noopener"
+        style={styles.poweredBy}
+      >
+        Built with ❤️ by <span style={styles.alpicName}>Alpic</span>
+      </a>
 
       {activeUrl && (
         <WebMCPProxy
@@ -142,124 +154,158 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     minHeight: "100vh",
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    background: "#000 url(/alpic-mountain.png) no-repeat right bottom",
+    backgroundSize: "auto 60%",
+    fontFamily: '"Mozilla Text", -apple-system, BlinkMacSystemFont, sans-serif',
     padding: 24,
+    gap: 32,
   },
   card: {
-    background: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: 16,
-    padding: 40,
+    background: "#0a0a0a",
+    border: "1px solid rgba(255, 255, 255, 0.12)",
+    borderRadius: 24,
+    padding: "48px 44px",
     width: "100%",
     maxWidth: 560,
-    boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+  badge: {
+    fontSize: 10,
+    fontWeight: 600,
+    letterSpacing: "0.08em",
+    color: "#fff",
+    background: "rgba(255, 255, 255, 0.1)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    borderRadius: 100,
+    padding: "3px 10px",
   },
   title: {
     margin: 0,
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#f8fafc",
+    fontSize: 24,
+    fontWeight: 600,
+    color: "#fff",
     letterSpacing: "-0.02em",
   },
   subtitle: {
-    margin: "8px 0 32px",
+    margin: "12px 0 36px",
     fontSize: 14,
-    color: "#94a3b8",
-    lineHeight: 1.5,
+    color: "#777",
+    lineHeight: 1.6,
   },
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: 8,
+    gap: 10,
   },
   label: {
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#cbd5e1",
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.06em",
+    color: "#666",
   },
   inputRow: {
     display: "flex",
-    gap: 8,
+    gap: 10,
   },
   input: {
     flex: 1,
-    padding: "10px 14px",
+    padding: "12px 16px",
     fontSize: 14,
-    borderRadius: 8,
-    border: "1px solid #475569",
-    background: "#0f172a",
-    color: "#f8fafc",
+    borderRadius: 12,
+    border: "1px solid rgba(255, 255, 255, 0.12)",
+    background: "#000",
+    color: "#fff",
     outline: "none",
+    fontFamily: "inherit",
   },
   button: {
-    padding: "10px 20px",
+    padding: "10px 22px",
     fontSize: 14,
     fontWeight: 600,
     borderRadius: 8,
-    border: "none",
-    background: "#3b82f6",
-    color: "#fff",
+    border: "1px solid #DDFFBA",
+    background: "#DDFFBA",
+    color: "#0a0a0a",
     cursor: "pointer",
     whiteSpace: "nowrap",
+    fontFamily: "inherit",
+    transition: "opacity 0.15s",
   },
   disconnectButton: {
-    padding: "10px 20px",
+    padding: "10px 22px",
     fontSize: 14,
     fontWeight: 600,
     borderRadius: 8,
-    border: "1px solid #475569",
+    border: "1px solid rgba(221, 255, 186, 0.3)",
     background: "transparent",
-    color: "#94a3b8",
+    color: "#DDFFBA",
     cursor: "pointer",
     whiteSpace: "nowrap",
+    fontFamily: "inherit",
+    transition: "border-color 0.15s, color 0.15s",
   },
   statusRow: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
-    marginTop: 20,
+    gap: 10,
+    marginTop: 24,
   },
   dot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: "50%",
     flexShrink: 0,
   },
   statusText: {
     fontSize: 13,
-    color: "#cbd5e1",
+    color: "#888",
   },
   toolList: {
-    marginTop: 24,
+    marginTop: 32,
     display: "flex",
     flexDirection: "column",
     gap: 8,
   },
   toolListTitle: {
-    fontSize: 15,
+    fontSize: 11,
     fontWeight: 600,
-    color: "#e2e8f0",
-    margin: "0 0 4px",
+    letterSpacing: "0.06em",
+    color: "#666",
+    margin: "0 0 8px",
   },
   toolCard: {
-    padding: "10px 14px",
-    borderRadius: 8,
-    background: "#0f172a",
-    border: "1px solid #334155",
+    padding: "14px 16px",
+    borderRadius: 12,
+    background: "rgba(255, 255, 255, 0.03)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
   },
   toolName: {
     fontSize: 13,
     fontWeight: 600,
-    color: "#60a5fa",
+    color: "#fff",
+    fontFamily: '"SF Mono", "Fira Code", "Fira Mono", Menlo, monospace',
   },
   toolDesc: {
-    margin: "4px 0 0",
+    margin: "6px 0 0",
     fontSize: 12,
-    color: "#94a3b8",
-    lineHeight: 1.4,
+    color: "#666",
+    lineHeight: 1.5,
+  },
+  poweredBy: {
+    fontSize: 12,
+    color: "#555",
+    textDecoration: "none",
+    letterSpacing: "0.02em",
+  },
+  alpicName: {
+    color: "#fff",
+    fontWeight: 600,
   },
 };

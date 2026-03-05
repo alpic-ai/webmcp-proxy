@@ -100,6 +100,20 @@ sequenceDiagram
 
 WebMCP Proxy uses `registerTool` / `unregisterTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
 
+## Demo
+
+A live demo is hosted at **[webmcp.netlify.app](https://webmcp.netlify.app/)**.
+
+The `demo/` folder contains a standalone React + Vite app that lets you enter an MCP server URL, connect to it, and see the tools it exposes — all registered via WebMCP in the browser.
+
+To run the demo locally:
+
+```bash
+pnpm run demo
+```
+
+This starts the Vite dev server with a built-in CORS proxy so you can connect to any MCP server without cross-origin issues.
+
 ## Requirements
 
 - The remote MCP server must support **Streamable HTTP** or **SSE** transport
