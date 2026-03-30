@@ -27,8 +27,12 @@ declare global {
   interface Navigator {
     modelContext?: {
       provideContext(context: { tools: WebMcpToolDescriptor[] }): void;
-      registerTool(tool: WebMcpToolDescriptor): void;
-      unregisterTool(name: string): void;
+      registerTool(
+        tool: WebMcpToolDescriptor,
+        options?: { signal?: AbortSignal },
+      ): void;
+      /** @deprecated Use AbortSignal with registerTool() instead. */
+      unregisterTool?(name: string): void;
     };
   }
 }

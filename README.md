@@ -98,7 +98,9 @@ sequenceDiagram
 
 ## Coexistence with page-specific tools
 
-WebMCP Proxy uses `registerTool` / `unregisterTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
+WebMCP Proxy uses `registerTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
+
+Tool unregistration is handled via `AbortSignal` (the recommended approach starting from Chrome 148). For backward compatibility with older browsers, `unregisterTool()` is also called when available.
 
 ## Demo
 
