@@ -79,16 +79,22 @@ export async function createWebMcpProxy(
     },
   }));
 
+  const controller = new AbortController();
+
   for (const descriptor of descriptors) {
-    navigator.modelContext.registerTool(descriptor);
+    navigator.modelContext.registerTool(descriptor, {
+      signal: controller.signal,
+    });
   }
 
   return {
     tools: mcpTools,
     disconnect: async () => {
+      // Backward-compat: also call unregisterTool if available (older browsers).
       for (const descriptor of descriptors) {
-        navigator.modelContext?.unregisterTool(descriptor.name);
+        navigator.modelContext?.unregisterTool?.(descriptor.name);
       }
+      controller.abort();
       await client.close();
     },
   };
