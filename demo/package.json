@@ -8,15 +8,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19",
-    "react-dom": "^19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "webmcp-proxy": "workspace:*"
   },
   "devDependencies": {
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^4",
-    "typescript": "^5",
-    "vite": "^6"
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3"
   }
 }
