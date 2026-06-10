@@ -2,7 +2,7 @@
 
 Advertise your existing MCP server's tools via [WebMCP](https://github.com/webmachinelearning/webmcp) on your website so any browsing agent can use them.
 
-WebMCP Proxy connects to a remote MCP server, discovers its tools, and registers them with the browser's `navigator.modelContext` API. When a browsing agent invokes a tool, the call is proxied to your MCP server and the result forwarded back.
+WebMCP Proxy connects to a remote MCP server, discovers its tools, and registers them with the browser's `document.modelContext` API. When a browsing agent invokes a tool, the call is proxied to your MCP server and the result forwarded back.
 
 ## Installation
 
@@ -84,7 +84,7 @@ sequenceDiagram
     end
 
     loop For each tool
-        Proxy->>Page: navigator.modelContext.registerTool()
+        Proxy->>Page: document.modelContext.registerTool()
     end
 
     Agent->>Page: Discovers tools via WebMCP
@@ -120,7 +120,7 @@ This starts the Vite dev server with a built-in CORS proxy so you can connect to
 
 - The remote MCP server must support **Streamable HTTP** or **SSE** transport
 - The MCP server must allow CORS requests from the browser origin
-- The browser must support the [WebMCP API](https://github.com/webmachinelearning/webmcp) (`navigator.modelContext`) — if unavailable, the proxy logs a warning and becomes a no-op
+- The browser must support the [WebMCP API](https://github.com/webmachinelearning/webmcp) (`document.modelContext`, with a fallback to the deprecated `navigator.modelContext`) — if unavailable, the proxy logs a warning and becomes a no-op
 
 ## License
 

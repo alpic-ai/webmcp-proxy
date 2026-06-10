@@ -48,7 +48,7 @@ async function connectWithFallback(
 
 /**
  * Connect to a remote MCP server and expose its tools to browsing agents
- * through the WebMCP browser API (`navigator.modelContext`).
+ * through the WebMCP browser API (`document.modelContext`).
  */
 export async function createWebMcpProxy(
   options: WebMcpProxyOptions,
@@ -58,9 +58,14 @@ export async function createWebMcpProxy(
     disconnect: async () => {},
   };
 
-  if (!navigator.modelContext) {
+  // The `modelContext` getter moved from `Navigator` to `Document` (WebMCP
+  // Issue 173 / PR #184). Prefer `document.modelContext` and fall back to the
+  // deprecated `navigator.modelContext` for older browsers.
+  const modelContext = document.modelContext ?? navigator.modelContext;
+
+  if (!modelContext) {
     console.warn(
-      "[webmcp-proxy] navigator.modelContext is not available in this browser. " +
+      "[webmcp-proxy] modelContext is not available in this browser. " +
         "Tools will not be registered. See https://github.com/webmachinelearning/webmcp for browser support.",
     );
     return noop;
@@ -82,7 +87,7 @@ export async function createWebMcpProxy(
   const controller = new AbortController();
 
   for (const descriptor of descriptors) {
-    navigator.modelContext.registerTool(descriptor, {
+    modelContext.registerTool(descriptor, {
       signal: controller.signal,
     });
   }
@@ -92,7 +97,7 @@ export async function createWebMcpProxy(
     disconnect: async () => {
       // Backward-compat: also call unregisterTool if available (older browsers).
       for (const descriptor of descriptors) {
-        navigator.modelContext?.unregisterTool?.(descriptor.name);
+        modelContext.unregisterTool?.(descriptor.name);
       }
       controller.abort();
       await client.close();

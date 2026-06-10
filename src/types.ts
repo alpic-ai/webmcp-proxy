@@ -23,17 +23,24 @@ export interface WebMcpProxyInstance {
   disconnect: () => Promise<void>;
 }
 
+export interface ModelContext {
+  provideContext(context: { tools: WebMcpToolDescriptor[] }): void;
+  registerTool(
+    tool: WebMcpToolDescriptor,
+    options?: { signal?: AbortSignal },
+  ): void;
+  /** @deprecated Use AbortSignal with registerTool() instead. */
+  unregisterTool?(name: string): void;
+}
+
 declare global {
+  interface Document {
+    modelContext?: ModelContext;
+  }
+
   interface Navigator {
-    modelContext?: {
-      provideContext(context: { tools: WebMcpToolDescriptor[] }): void;
-      registerTool(
-        tool: WebMcpToolDescriptor,
-        options?: { signal?: AbortSignal },
-      ): void;
-      /** @deprecated Use AbortSignal with registerTool() instead. */
-      unregisterTool?(name: string): void;
-    };
+    /** @deprecated Use `document.modelContext` instead. Removed in a future Chrome release. */
+    modelContext?: ModelContext;
   }
 }
 
