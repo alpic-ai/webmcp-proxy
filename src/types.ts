@@ -28,7 +28,7 @@ export interface ModelContext {
   registerTool(
     tool: WebMcpToolDescriptor,
     options?: { signal?: AbortSignal },
-  ): void;
+  ): Promise<void>;
   /** @deprecated Use AbortSignal with registerTool() instead. */
   unregisterTool?(name: string): void;
 }

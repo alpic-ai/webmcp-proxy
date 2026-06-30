@@ -87,9 +87,16 @@ export async function createWebMcpProxy(
   const controller = new AbortController();
 
   for (const descriptor of descriptors) {
-    modelContext.registerTool(descriptor, {
-      signal: controller.signal,
-    });
+    try {
+      await modelContext.registerTool(descriptor, {
+        signal: controller.signal,
+      });
+    } catch (e) {
+      console.error(
+        `[webmcp-proxy] Failed to register tool "${descriptor.name}":`,
+        e,
+      );
+    }
   }
 
   return {
