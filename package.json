@@ -1,6 +1,6 @@
 {
   "name": "webmcp-proxy",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Proxy tools from a remote MCP server to the browser via WebMCP",
   "keywords": [
     "webmcp",
