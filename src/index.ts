@@ -15,6 +15,7 @@ export type {
   McpTool,
   McpToolResult,
   WebMcpToolDescriptor,
+  WebMcpToolExecuteOptions,
 } from "./types.js";
 
 async function connectWithFallback(
@@ -79,8 +80,12 @@ export async function createWebMcpProxy(
     name: tool.name,
     description: tool.description ?? "",
     inputSchema: tool.inputSchema as Record<string, unknown>,
-    execute: async (args: Record<string, unknown>) => {
-      return client.callTool({ name: tool.name, arguments: args });
+    execute: async (args, { signal }) => {
+      return client.callTool(
+        { name: tool.name, arguments: args },
+        undefined,
+        { signal },
+      );
     },
   }));
 

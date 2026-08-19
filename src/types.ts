@@ -44,12 +44,17 @@ declare global {
   }
 }
 
+export interface WebMcpToolExecuteOptions {
+  /** Aborted when the agent or user cancels this tool execution. */
+  signal: AbortSignal;
+}
+
 export interface WebMcpToolDescriptor {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
   execute: (
     args: Record<string, unknown>,
-    agent: unknown,
+    options: WebMcpToolExecuteOptions,
   ) => unknown | Promise<unknown>;
 }

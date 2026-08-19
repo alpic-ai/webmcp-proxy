@@ -96,11 +96,13 @@ sequenceDiagram
     Page-->>Agent: result
 ```
 
+Starting in Chrome 153, each tool's `execute` callback receives an `AbortSignal` as `execute(input, { signal })`. The proxy forwards that signal to the remote MCP `tools/call`, so cancelled agent/user executions abort the in-flight request instead of leaving work running.
+
 ## Coexistence with page-specific tools
 
 WebMCP Proxy uses `registerTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
 
-Tool unregistration is handled via `AbortSignal` (the recommended approach starting from Chrome 148). For backward compatibility with older browsers, `unregisterTool()` is also called when available.
+Tool unregistration is handled via `AbortSignal` (the recommended approach starting from Chrome 148). For backward compatibility with older browsers, `unregisterTool()` is also called when available. As of Chrome 153, unregistering a tool no longer cancels in-flight executions — cancellation goes through the per-execution `signal` instead.
 
 ## Demo
 
