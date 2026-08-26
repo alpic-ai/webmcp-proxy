@@ -23,38 +23,20 @@ export interface WebMcpProxyInstance {
   disconnect: () => Promise<void>;
 }
 
-export interface ModelContext {
-  provideContext(context: { tools: WebMcpToolDescriptor[] }): void;
-  registerTool(
-    tool: WebMcpToolDescriptor,
-    options?: { signal?: AbortSignal },
-  ): Promise<void>;
+/**
+ * Older Chrome builds exposed `modelContext` on `Navigator` and provided an
+ * explicit `unregisterTool()` method instead of AbortSignal-based teardown.
+ * Prefer `document.modelContext` from `webmcp-types`; this type preserves
+ * backward compatibility with those early builds.
+ */
+export type LegacyModelContext = WebMCP.ModelContext & {
   /** @deprecated Use AbortSignal with registerTool() instead. */
   unregisterTool?(name: string): void;
-}
+};
 
 declare global {
-  interface Document {
-    modelContext?: ModelContext;
-  }
-
   interface Navigator {
     /** @deprecated Use `document.modelContext` instead. Removed in a future Chrome release. */
-    modelContext?: ModelContext;
+    modelContext?: LegacyModelContext;
   }
-}
-
-export interface WebMcpToolExecuteOptions {
-  /** Aborted when the agent or user cancels this tool execution. */
-  signal: AbortSignal;
-}
-
-export interface WebMcpToolDescriptor {
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-  execute: (
-    args: Record<string, unknown>,
-    options: WebMcpToolExecuteOptions,
-  ) => unknown | Promise<unknown>;
 }
