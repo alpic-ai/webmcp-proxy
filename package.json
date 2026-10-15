@@ -47,8 +47,7 @@
     "@types/react": "^19.2.17",
     "react": "^19.2.7",
     "typescript": "^6.0.3",
-    "vue": "^3.5.39",
-    "webmcp-types": "^0.1.5"
+    "vue": "^3.5.39"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -64,6 +63,7 @@
   },
   "packageManager": "pnpm@10.30.0",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/client": "^2.3.1",
+    "webmcp-types": "^0.1.10"
   }
 }

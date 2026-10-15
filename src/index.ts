@@ -1,7 +1,9 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+  SSEClientTransport,
+  type Transport,
+} from "@modelcontextprotocol/client";
 import type {
   WebMcpProxyOptions,
   WebMcpProxyInstance,
@@ -80,7 +82,7 @@ export async function createWebMcpProxy(
     description: tool.description ?? "",
     inputSchema: tool.inputSchema,
     execute: async (args, { signal }) => {
-      return client.callTool({ name: tool.name, arguments: args }, undefined, {
+      return client.callTool({ name: tool.name, arguments: args }, {
         signal,
       });
     },
