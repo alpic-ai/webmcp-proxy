@@ -7,7 +7,7 @@ import {
 import type {
   WebMcpProxyOptions,
   WebMcpProxyInstance,
-  WebMcpToolDescriptor,
+  LegacyModelContext,
 } from "./types.js";
 
 export type {
@@ -16,8 +16,6 @@ export type {
   WebMcpProxyStatus,
   McpTool,
   McpToolResult,
-  WebMcpToolDescriptor,
-  WebMcpToolExecuteOptions,
 } from "./types.js";
 
 async function connectWithFallback(
@@ -64,7 +62,8 @@ export async function createWebMcpProxy(
   // The `modelContext` getter moved from `Navigator` to `Document` (WebMCP
   // Issue 173 / PR #184). Prefer `document.modelContext` and fall back to the
   // deprecated `navigator.modelContext` for older browsers.
-  const modelContext = document.modelContext ?? navigator.modelContext;
+  const modelContext: LegacyModelContext | undefined =
+    document.modelContext ?? navigator.modelContext;
 
   if (!modelContext) {
     console.warn(
@@ -78,15 +77,14 @@ export async function createWebMcpProxy(
 
   const { tools: mcpTools } = await client.listTools();
 
-  const descriptors: WebMcpToolDescriptor[] = mcpTools.map((tool) => ({
+  const descriptors: WebMCP.ModelContextTool[] = mcpTools.map((tool) => ({
     name: tool.name,
     description: tool.description ?? "",
     inputSchema: tool.inputSchema,
     execute: async (args, { signal }) => {
-      return client.callTool(
-        { name: tool.name, arguments: args },
-        { signal },
-      );
+      return client.callTool({ name: tool.name, arguments: args }, {
+        signal,
+      });
     },
   }));
 
@@ -108,10 +106,9 @@ export async function createWebMcpProxy(
   return {
     tools: mcpTools,
     disconnect: async () => {
-      if ("unregisterTool" in modelContext) {
-        for (const descriptor of descriptors) {
-          modelContext.unregisterTool?.(descriptor.name);
-        }
+      // Backward-compat: also call unregisterTool if available (older browsers).
+      for (const descriptor of descriptors) {
+        modelContext.unregisterTool?.(descriptor.name);
       }
       controller.abort();
       await client.close();
