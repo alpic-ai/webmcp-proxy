@@ -79,7 +79,7 @@ export async function createWebMcpProxy(
   const descriptors: WebMcpToolDescriptor[] = mcpTools.map((tool) => ({
     name: tool.name,
     description: tool.description ?? "",
-    inputSchema: tool.inputSchema as Record<string, unknown>,
+    inputSchema: tool.inputSchema,
     execute: async (args, { signal }) => {
       return client.callTool(
         { name: tool.name, arguments: args },
@@ -107,9 +107,10 @@ export async function createWebMcpProxy(
   return {
     tools: mcpTools,
     disconnect: async () => {
-      // Backward-compat: also call unregisterTool if available (older browsers).
-      for (const descriptor of descriptors) {
-        modelContext.unregisterTool?.(descriptor.name);
+      if ("unregisterTool" in modelContext) {
+        for (const descriptor of descriptors) {
+          modelContext.unregisterTool?.(descriptor.name);
+        }
       }
       controller.abort();
       await client.close();

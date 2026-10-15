@@ -1,4 +1,5 @@
 import type { Tool, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { WebMCP } from "webmcp-types";
 
 export type McpTool = Tool;
 export type McpToolResult = CallToolResult;
@@ -23,38 +24,20 @@ export interface WebMcpProxyInstance {
   disconnect: () => Promise<void>;
 }
 
-export interface ModelContext {
-  provideContext(context: { tools: WebMcpToolDescriptor[] }): void;
-  registerTool(
-    tool: WebMcpToolDescriptor,
-    options?: { signal?: AbortSignal },
-  ): Promise<void>;
+export interface ModelContext extends Pick<WebMCP.ModelContext, "registerTool"> {
   /** @deprecated Use AbortSignal with registerTool() instead. */
   unregisterTool?(name: string): void;
 }
 
 declare global {
-  interface Document {
-    modelContext?: ModelContext;
-  }
-
   interface Navigator {
     /** @deprecated Use `document.modelContext` instead. Removed in a future Chrome release. */
     modelContext?: ModelContext;
   }
 }
 
-export interface WebMcpToolExecuteOptions {
-  /** Aborted when the agent or user cancels this tool execution. */
-  signal: AbortSignal;
-}
+export type WebMcpToolExecuteOptions = WebMCP.ToolExecuteCallbackOptions;
 
-export interface WebMcpToolDescriptor {
-  name: string;
-  description: string;
+export interface WebMcpToolDescriptor extends WebMCP.ModelContextTool {
   inputSchema: Record<string, unknown>;
-  execute: (
-    args: Record<string, unknown>,
-    options: WebMcpToolExecuteOptions,
-  ) => unknown | Promise<unknown>;
 }
