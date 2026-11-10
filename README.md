@@ -98,6 +98,16 @@ sequenceDiagram
 
 Starting in Chrome 153, each tool's `execute` callback receives an `AbortSignal` as `execute(input, { signal })`. The proxy forwards that signal to the remote MCP `tools/call`, so cancelled agent/user executions abort the in-flight request instead of leaving work running.
 
+### Output schemas
+
+Starting in Chrome 159.0.8140.0, WebMCP supports an optional `outputSchema`. When an MCP tool declares one, the proxy includes it when registering the tool and returns the tool's `structuredContent` as its WebMCP result, rather than the full MCP response wrapper.
+
+The proxy forwards the input and output schemas but does not validate tool arguments or returned data against them. Validation is delegated to the browser or browsing agent. The proxy uses a direct MCP request to avoid the client's automatic output-schema checks; normal MCP protocol handling remains in place.
+
+Tools without an output schema and MCP tool errors keep returning the full MCP response unchanged. Older WebMCP browsers ignore the optional registration property.
+
+Browser-side output validation is not yet guaranteed by the WebMCP specification ([issue #92](https://github.com/webmachinelearning/webmcp/issues/92)). A browser or browsing agent that does not implement it may pass malformed tool data to the model; the proxy does not provide a fallback validator.
+
 ## Coexistence with page-specific tools
 
 WebMCP Proxy uses `registerTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
