@@ -81,7 +81,7 @@ export async function createWebMcpProxy(
     name: tool.name,
     description: tool.description ?? "",
     inputSchema: tool.inputSchema,
-    ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
+    outputSchema: tool.outputSchema,
     execute: async (args, { signal }) => {
       const result = await client.callTool(
         { name: tool.name, arguments: args },

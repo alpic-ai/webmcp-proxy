@@ -107,7 +107,7 @@ describe("WebMCP output schemas", () => {
 
   it("advertises the remote tool's output schema", async () => {
     const proxy = await connect();
-    expect(registered[0].outputSchema).toEqual(outputSchema);
+    expect(registered[0]).toHaveProperty("outputSchema", outputSchema);
     expect(registered[0].inputSchema).toEqual(weatherTool.inputSchema);
     expect(proxy.tools[0].outputSchema).toEqual(outputSchema);
   });
@@ -206,7 +206,7 @@ describe("WebMCP output schemas", () => {
       tools = [tool];
       result.isError = isError;
       expect(await execute()).toEqual(result);
-      expect(registered[0]).not.toHaveProperty("outputSchema");
+      expect(registered[0]).toHaveProperty("outputSchema", undefined);
     },
   );
 
@@ -233,6 +233,6 @@ describe("WebMCP output schemas", () => {
     vi.stubGlobal("document", {});
     vi.stubGlobal("navigator", { modelContext });
     expect(await execute()).toEqual(result.structuredContent);
-    expect(registered[0].outputSchema).toEqual(outputSchema);
+    expect(registered[0]).toHaveProperty("outputSchema", outputSchema);
   });
 });
