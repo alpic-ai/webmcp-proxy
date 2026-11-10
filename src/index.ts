@@ -81,10 +81,35 @@ export async function createWebMcpProxy(
     name: tool.name,
     description: tool.description ?? "",
     inputSchema: tool.inputSchema,
+    ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
     execute: async (args, { signal }) => {
-      return client.callTool({ name: tool.name, arguments: args }, {
-        signal,
-      });
+      const result = await client.callTool(
+        { name: tool.name, arguments: args },
+        {
+          signal,
+          // Validate against the same schema advertised to WebMCP, even if the
+          // client's tools cache has changed since registration.
+          toolDefinition: tool,
+        },
+      );
+
+      if (!tool.outputSchema) return result;
+
+      // An MCP error is not a successful output and must not be checked by
+      // browsing agents against the advertised schema.
+      if (result.isError) {
+        const message = result.content
+          .filter((content) => content.type === "text")
+          .map((content) => content.text)
+          .join("\n");
+        throw new Error(
+          `Tool "${tool.name}" failed: ${message || "The MCP server returned an error."}`,
+        );
+      }
+
+      // callTool validates structuredContent (and rejects missing or invalid
+      // data). WebMCP's outputSchema describes this value, not the MCP envelope.
+      return result.structuredContent;
     },
   }));
 

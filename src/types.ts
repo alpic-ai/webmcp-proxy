@@ -36,6 +36,19 @@ export type LegacyModelContext = WebMCP.ModelContext & {
 };
 
 declare global {
+  // Remove once webmcp-types includes WebMCP spec PR #254.
+  namespace WebMCP {
+    interface ModelContextTool {
+      /** A JSON Schema describing the tool's return value. */
+      outputSchema?: object;
+    }
+
+    interface RegisteredTool {
+      /** A deep copy of the output schema supplied at registration. */
+      outputSchema?: object;
+    }
+  }
+
   interface Navigator {
     /** @deprecated Use `document.modelContext` instead. Removed in a future Chrome release. */
     modelContext?: LegacyModelContext;
