@@ -50,7 +50,7 @@ describe("WebMCP output schemas", () => {
     });
     vi.stubGlobal("navigator", {});
 
-    // Exercise the real MCP client and its validator through a fake HTTP server.
+    // Exercise the real MCP client through a fake HTTP server.
     vi.stubGlobal(
       "fetch",
       vi.fn(async (_url: unknown, init: RequestInit) => {
@@ -112,7 +112,7 @@ describe("WebMCP output schemas", () => {
     expect(proxy.tools[0].outputSchema).toEqual(outputSchema);
   });
 
-  it("returns validated structured data, not the MCP response wrapper", async () => {
+  it("returns structured data, not the MCP response wrapper", async () => {
     expect(await execute()).toEqual({ temperature: 21, conditions: "sunny" });
   });
 
@@ -120,83 +120,39 @@ describe("WebMCP output schemas", () => {
     { temperature: "warm", conditions: "sunny" },
     { temperature: 21 },
     { temperature: 21, conditions: "sunny", unexpected: true },
-  ])("rejects data that does not match the schema: %j", async (data) => {
+  ])("leaves output-schema validation to the browser: %j", async (data) => {
     result.structuredContent = data;
-    await expect(execute()).rejects.toThrow(
-      /does not match the tool's output schema/i,
-    );
+    expect(await execute()).toEqual(data);
   });
 
-  it("rejects missing structured content even when text contains valid JSON", async () => {
+  it("does not validate or repair missing structured content", async () => {
     result = {
       content: [
         { type: "text", text: '{"temperature":21,"conditions":"sunny"}' },
       ],
     };
-    await expect(execute()).rejects.toThrow(
-      /did not return structured content/i,
-    );
+    expect(await execute()).toBeUndefined();
   });
 
-  it("rejects an unusable schema rather than forwarding unchecked data", async () => {
+  it("does not compile the output schema in the proxy", async () => {
     tools = [
       { ...weatherTool, outputSchema: { type: "object", $ref: "#/missing" } },
     ];
-    await expect(execute()).rejects.toThrow(
-      /invalid outputSchema|failed to validate/i,
-    );
+    expect(await execute()).toEqual(result.structuredContent);
   });
 
-  it.each([21, "warm"])(
-    "validates nested schema references (temperature: %s)",
-    async (temperature) => {
-      tools = [
-        {
-          ...weatherTool,
-          outputSchema: {
-            type: "object",
-            $defs: { reading: outputSchema },
-            properties: { weather: { $ref: "#/$defs/reading" } },
-            required: ["weather"],
-          },
-        },
-      ];
-      result.structuredContent = {
-        weather: { temperature, conditions: "sunny" },
-      };
-      if (typeof temperature === "number") {
-        expect(await execute()).toEqual(result.structuredContent);
-      } else {
-        await expect(execute()).rejects.toThrow(
-          /does not match the tool's output schema/i,
-        );
-      }
-    },
-  );
-
-  it("rejects null structured content for an object schema", async () => {
-    result.structuredContent = null;
-    await expect(execute()).rejects.toThrow(
-      /expected record, received null/i,
-    );
-  });
-
-  it("propagates MCP tool errors without treating them as schema violations", async () => {
+  it("preserves MCP tool errors unchanged", async () => {
     result = {
       isError: true,
       content: [{ type: "text", text: "Weather service unavailable" }],
       structuredContent: { error: "unavailable" },
     };
-    await expect(execute()).rejects.toThrow(
-      'Tool "getWeather" failed: Weather service unavailable',
-    );
+    expect(await execute()).toEqual(result);
   });
 
-  it("provides a fallback message for MCP errors without text", async () => {
+  it("does not add a custom message to MCP errors without text", async () => {
     result = { isError: true, content: [] };
-    await expect(execute()).rejects.toThrow(
-      "The MCP server returned an error.",
-    );
+    expect(await execute()).toEqual(result);
   });
 
   it.each([false, true])(
@@ -210,13 +166,34 @@ describe("WebMCP output schemas", () => {
     },
   );
 
-  it("keeps forwarding the execution signal and uses the advertised tool definition", async () => {
+  it("forwards the execution signal without using callTool's schema checks", async () => {
+    const request = vi.spyOn(Client.prototype, "request");
     const callTool = vi.spyOn(Client.prototype, "callTool");
     const signal = new AbortController().signal;
     await execute(signal);
-    expect(callTool).toHaveBeenCalledWith(
-      { name: "getWeather", arguments: { city: "Paris" } },
-      { signal, toolDefinition: expect.objectContaining({ outputSchema }) },
+    expect(request).toHaveBeenCalledWith(
+      {
+        method: "tools/call",
+        params: { name: "getWeather", arguments: { city: "Paris" } },
+      },
+      { signal },
+    );
+    expect(callTool).not.toHaveBeenCalled();
+  });
+
+  it("leaves input-schema validation to the browser", async () => {
+    const request = vi.spyOn(Client.prototype, "request");
+    await connect();
+    const signal = new AbortController().signal;
+    expect(await registered[0].execute({ city: 42 }, { signal })).toEqual(
+      result.structuredContent,
+    );
+    expect(request).toHaveBeenCalledWith(
+      {
+        method: "tools/call",
+        params: { name: "getWeather", arguments: { city: 42 } },
+      },
+      { signal },
     );
   });
 
@@ -228,7 +205,7 @@ describe("WebMCP output schemas", () => {
     );
   });
 
-  it("also advertises and validates schemas with the legacy navigator API", async () => {
+  it("also advertises schemas with the legacy navigator API", async () => {
     const modelContext = document.modelContext;
     vi.stubGlobal("document", {});
     vi.stubGlobal("navigator", { modelContext });
