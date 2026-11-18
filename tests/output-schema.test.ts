@@ -125,25 +125,27 @@ describe("WebMCP output schemas", () => {
     { temperature: "warm", conditions: "sunny" },
     { temperature: 21 },
     { temperature: 21, conditions: "sunny", unexpected: true },
-  ])("leaves output-schema validation to the browser: %j", async (data) => {
+  ])("rejects results that do not match the cached output schema: %j", async (data) => {
     result.structuredContent = data;
-    expect(await execute()).toEqual(data);
+    await expect(execute()).rejects.toThrow(/output schema/i);
   });
 
-  it("does not validate or repair missing structured content", async () => {
+  it("rejects missing structured content instead of repairing it from text", async () => {
     result = {
       content: [
         { type: "text", text: '{"temperature":21,"conditions":"sunny"}' },
       ],
     };
-    expect(await execute()).toBeUndefined();
+    await expect(execute()).rejects.toThrow(/did not return structured content/i);
   });
 
-  it("does not compile the output schema in the proxy", async () => {
+  it("lets the SDK reject an unusable output schema", async () => {
     tools = [
       { ...weatherTool, outputSchema: { type: "object", $ref: "#/missing" } },
     ];
-    expect(await execute()).toEqual(result.structuredContent);
+    await expect(execute()).rejects.toThrow(
+      /invalid outputSchema|Failed to validate structured content/i,
+    );
   });
 
   it("preserves MCP tool errors unchanged", async () => {
@@ -171,33 +173,25 @@ describe("WebMCP output schemas", () => {
     },
   );
 
-  it("forwards the execution signal without using callTool's schema checks", async () => {
-    const request = vi.spyOn(Client.prototype, "request");
+  it("uses callTool with the execution signal and no toolDefinition override", async () => {
     const callTool = vi.spyOn(Client.prototype, "callTool");
     const signal = new AbortController().signal;
     await execute(signal);
-    expect(request).toHaveBeenCalledWith(
-      {
-        method: "tools/call",
-        params: { name: "getWeather", arguments: { city: "Paris" } },
-      },
+    expect(callTool).toHaveBeenCalledExactlyOnceWith(
+      { name: "getWeather", arguments: { city: "Paris" } },
       { signal },
     );
-    expect(callTool).not.toHaveBeenCalled();
   });
 
   it("leaves input-schema validation to the browser", async () => {
-    const request = vi.spyOn(Client.prototype, "request");
+    const callTool = vi.spyOn(Client.prototype, "callTool");
     await connect();
     const signal = new AbortController().signal;
     expect(await registered[0].execute({ city: 42 }, { signal })).toEqual(
       result.structuredContent,
     );
-    expect(request).toHaveBeenCalledWith(
-      {
-        method: "tools/call",
-        params: { name: "getWeather", arguments: { city: 42 } },
-      },
+    expect(callTool).toHaveBeenCalledWith(
+      { name: "getWeather", arguments: { city: 42 } },
       { signal },
     );
   });

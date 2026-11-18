@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   connect: vi.fn(),
   listTools: vi.fn(),
-  request: vi.fn(),
+  callTool: vi.fn(),
   close: vi.fn(),
   installWebMCP: vi.fn(),
 }));
@@ -12,7 +12,7 @@ vi.mock("@modelcontextprotocol/client", () => ({
   Client: class {
     connect = mocks.connect;
     listTools = mocks.listTools;
-    request = mocks.request;
+    callTool = mocks.callTool;
     close = mocks.close;
   },
   StreamableHTTPClientTransport: class {},
@@ -128,18 +128,18 @@ describe("WebMCP proxy registration", () => {
     const native = context();
     vi.stubGlobal("document", { modelContext: native });
     const result = { content: [{ type: "text", text: "Found it" }] };
-    mocks.request.mockResolvedValue(result);
+    mocks.callTool.mockResolvedValue(result);
     const proxy = await createWebMcpProxy(options);
     const descriptor = native.registerTool.mock.calls[0][0];
     const controller = new AbortController();
 
     expect(await descriptor.execute({ query: "shoes" }, { signal: controller.signal })).toEqual(result);
-    expect(mocks.request).toHaveBeenCalledWith(
-      { method: "tools/call", params: { name: tool.name, arguments: { query: "shoes" } } },
+    expect(mocks.callTool).toHaveBeenCalledWith(
+      { name: tool.name, arguments: { query: "shoes" } },
       { signal: controller.signal },
     );
     controller.abort();
-    expect(mocks.request.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(mocks.callTool.mock.calls[0][1].signal.aborted).toBe(true);
     await proxy.disconnect();
   });
 

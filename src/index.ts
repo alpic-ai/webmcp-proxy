@@ -82,9 +82,8 @@ export async function createWebMcpProxy(
     inputSchema: tool.inputSchema,
     outputSchema: tool.outputSchema,
     execute: async (args, { signal }) => {
-      // Leave tool-schema validation to WebMCP, rather than callTool's validator.
-      const result = await client.request(
-        { method: "tools/call", params: { name: tool.name, arguments: args } },
+      const result = await client.callTool(
+        { name: tool.name, arguments: args },
         { signal },
       );
 

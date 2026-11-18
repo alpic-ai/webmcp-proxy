@@ -104,11 +104,11 @@ Starting in Chrome 153, each tool's `execute` callback receives an `AbortSignal`
 
 Starting in Chrome 159.0.8140.0, WebMCP supports an optional `outputSchema`. When an MCP tool declares one, the proxy includes it when registering the tool and returns the tool's `structuredContent` as its WebMCP result, rather than the full MCP response wrapper.
 
-The proxy forwards the input and output schemas but does not validate tool arguments or returned data against them. Validation is delegated to the browser or browsing agent. The proxy uses a direct MCP request to avoid the client's automatic output-schema checks; normal MCP protocol handling remains in place.
+The proxy uses the MCP client's standard `callTool()` method without a `toolDefinition` override. The client validates successful structured results against the output schema cached from `tools/list`. Missing or invalid structured content causes the execution to reject instead of returning malformed data. Input-schema validation remains the browser or browsing agent's responsibility.
 
 Tools without an output schema and MCP tool errors keep returning the full MCP response unchanged. Older WebMCP browsers ignore the optional registration property.
 
-Browser-side output validation is not yet guaranteed by the WebMCP specification ([issue #92](https://github.com/webmachinelearning/webmcp/issues/92)). A browser or browsing agent that does not implement it may pass malformed tool data to the model; the proxy does not provide a fallback validator.
+Browser-side output validation is not yet guaranteed by the WebMCP specification ([issue #92](https://github.com/webmachinelearning/webmcp/issues/92)). The MCP client's output validation still applies even when the browser does not implement it. The proxy does not add a separate validator or custom error-message handling.
 
 ## Coexistence with page-specific tools
 
