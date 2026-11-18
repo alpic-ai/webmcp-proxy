@@ -4,6 +4,7 @@ import {
   SSEClientTransport,
   type Transport,
 } from "@modelcontextprotocol/client";
+import { installWebMCP } from "@w3c/webmcp-polyfill";
 import type {
   WebMcpProxyOptions,
   WebMcpProxyInstance,
@@ -62,13 +63,21 @@ export async function createWebMcpProxy(
   // The `modelContext` getter moved from `Navigator` to `Document` (WebMCP
   // Issue 173 / PR #184). Prefer `document.modelContext` and fall back to the
   // deprecated `navigator.modelContext` for older browsers.
-  const modelContext: LegacyModelContext | undefined =
-    document.modelContext ?? navigator.modelContext;
+  let modelContext: LegacyModelContext | undefined =
+    typeof document === "undefined"
+      ? undefined
+      : document.modelContext ?? navigator.modelContext;
+
+  if (!modelContext) {
+    installWebMCP();
+    modelContext =
+      typeof document === "undefined" ? undefined : document.modelContext;
+  }
 
   if (!modelContext) {
     console.warn(
       "[webmcp-proxy] modelContext is not available in this browser. " +
-        "Tools will not be registered. See https://github.com/webmachinelearning/webmcp for browser support.",
+        "Tools will not be registered. WebMCP requires a secure browser context (HTTPS or localhost).",
     );
     return noop;
   }
@@ -79,7 +88,7 @@ export async function createWebMcpProxy(
 
   const descriptors: WebMCP.ModelContextTool[] = mcpTools.map((tool) => ({
     name: tool.name,
-    description: tool.description ?? "",
+    description: tool.description?.trim() ? tool.description : tool.name,
     inputSchema: tool.inputSchema,
     execute: async (args, { signal }) => {
       return client.callTool({ name: tool.name, arguments: args }, {
@@ -89,12 +98,14 @@ export async function createWebMcpProxy(
   }));
 
   const controller = new AbortController();
+  const registeredTools: typeof mcpTools = [];
 
-  for (const descriptor of descriptors) {
+  for (const [index, descriptor] of descriptors.entries()) {
     try {
       await modelContext.registerTool(descriptor, {
         signal: controller.signal,
       });
+      registeredTools.push(mcpTools[index]);
     } catch (e) {
       console.error(
         `[webmcp-proxy] Failed to register tool "${descriptor.name}":`,
@@ -104,11 +115,11 @@ export async function createWebMcpProxy(
   }
 
   return {
-    tools: mcpTools,
+    tools: registeredTools,
     disconnect: async () => {
       // Backward-compat: also call unregisterTool if available (older browsers).
-      for (const descriptor of descriptors) {
-        modelContext.unregisterTool?.(descriptor.name);
+      for (const tool of registeredTools) {
+        modelContext.unregisterTool?.(tool.name);
       }
       controller.abort();
       await client.close();
