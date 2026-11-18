@@ -6,6 +6,10 @@ import {
 } from "@modelcontextprotocol/client";
 import { createWebMcpProxy, type WebMcpProxyInstance } from "../src/index.js";
 
+const { installWebMCP } = vi.hoisted(() => ({ installWebMCP: vi.fn() }));
+
+vi.mock("@w3c/webmcp-polyfill", () => ({ installWebMCP }));
+
 const outputSchema: NonNullable<Tool["outputSchema"]> = {
   type: "object",
   properties: {
@@ -34,6 +38,7 @@ describe("WebMCP output schemas", () => {
   let proxies: WebMcpProxyInstance[];
 
   beforeEach(() => {
+    installWebMCP.mockReset();
     tools = [weatherTool];
     result = {
       content: [{ type: "text", text: "21 degrees, sunny" }],
@@ -205,11 +210,14 @@ describe("WebMCP output schemas", () => {
     );
   });
 
-  it("also advertises schemas with the legacy navigator API", async () => {
+  it("also advertises schemas when the polyfill installs document.modelContext", async () => {
     const modelContext = document.modelContext;
     vi.stubGlobal("document", {});
-    vi.stubGlobal("navigator", { modelContext });
+    installWebMCP.mockImplementation(() => {
+      vi.stubGlobal("document", { modelContext });
+    });
     expect(await execute()).toEqual(result.structuredContent);
+    expect(installWebMCP).toHaveBeenCalledOnce();
     expect(registered[0]).toHaveProperty("outputSchema", outputSchema);
   });
 });
