@@ -65,6 +65,7 @@ describe("WebMCP proxy registration", () => {
       { signal: expect.any(AbortSignal) },
     );
     expect(proxy.tools).toEqual([tool]);
+    expect(console.warn).not.toHaveBeenCalled();
     await proxy.disconnect();
     expect(polyfill.registerTool.mock.calls[0][1].signal.aborted).toBe(true);
     expect(mocks.close).toHaveBeenCalledOnce();
@@ -81,6 +82,7 @@ describe("WebMCP proxy registration", () => {
     expect(mocks.installWebMCP).toHaveBeenCalledOnce();
     expect(native.registerTool).toHaveBeenCalledOnce();
     expect(legacy.registerTool).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
     await proxy.disconnect();
   });
 
@@ -110,13 +112,14 @@ describe("WebMCP proxy registration", () => {
     await proxy.disconnect();
   });
 
-  it("is safe to call without browser globals during server-side rendering", async () => {
+  it("silently skips registration during server-side rendering", async () => {
     vi.stubGlobal("document", undefined);
     vi.stubGlobal("navigator", undefined);
 
     const proxy = await createWebMcpProxy(options);
 
     expect(proxy.tools).toEqual([]);
+    expect(console.warn).not.toHaveBeenCalled();
     expect(mocks.connect).not.toHaveBeenCalled();
     await proxy.disconnect();
   });

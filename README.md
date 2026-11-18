@@ -141,7 +141,7 @@ This starts the Vite dev server with a built-in CORS proxy so you can connect to
 
 - The remote MCP server must support **Streamable HTTP** or **SSE** transport
 - The MCP server must allow CORS requests from the browser origin
-- Serve the page over **HTTPS or localhost** so the polyfill can install the [WebMCP API](https://github.com/webmachinelearning/webmcp). Native `document.modelContext` is used when available. Outside a supported browser context (including server-side rendering), the proxy logs a warning and becomes a no-op without contacting the MCP server.
+- Serve the page over **HTTPS or localhost** so the polyfill can install the [WebMCP API](https://github.com/webmachinelearning/webmcp). Native `document.modelContext` is used when available. If the browser page cannot register tools, the proxy logs a warning explaining this requirement and becomes a no-op without contacting the MCP server. Server-side rendering silently skips registration. Successful native or polyfill registration does not produce a warning.
 
 ## License
 

@@ -60,13 +60,14 @@ export async function createWebMcpProxy(
   };
 
   installWebMCP();
-  const modelContext =
-    typeof document === "undefined" ? undefined : document.modelContext;
+  if (typeof document === "undefined") return noop;
+
+  const modelContext = document.modelContext;
 
   if (!modelContext) {
     console.warn(
-      "[webmcp-proxy] modelContext is not available in this browser. " +
-        "Tools will not be registered. WebMCP requires a secure browser context (HTTPS or localhost).",
+      "[webmcp-proxy] Tools cannot be registered on this page. " +
+        "Serve the page over HTTPS or localhost to enable WebMCP.",
     );
     return noop;
   }
