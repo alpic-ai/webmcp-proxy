@@ -33,7 +33,7 @@ const tool = {
 const options = { url: "https://mcp.example.com/mcp" };
 
 function context() {
-  return { registerTool: vi.fn().mockResolvedValue(undefined), unregisterTool: vi.fn() };
+  return { registerTool: vi.fn().mockResolvedValue(undefined) };
 }
 
 describe("WebMCP proxy registration", () => {
@@ -70,7 +70,7 @@ describe("WebMCP proxy registration", () => {
     expect(mocks.close).toHaveBeenCalledOnce();
   });
 
-  it("preserves native document.modelContext and prefers it over the legacy API", async () => {
+  it("uses native document.modelContext after calling the installer", async () => {
     const native = context();
     const legacy = context();
     vi.stubGlobal("document", { modelContext: native });
@@ -78,22 +78,27 @@ describe("WebMCP proxy registration", () => {
 
     const proxy = await createWebMcpProxy(options);
 
-    expect(mocks.installWebMCP).not.toHaveBeenCalled();
+    expect(mocks.installWebMCP).toHaveBeenCalledOnce();
     expect(native.registerTool).toHaveBeenCalledOnce();
     expect(legacy.registerTool).not.toHaveBeenCalled();
     await proxy.disconnect();
   });
 
-  it("preserves older navigator.modelContext implementations", async () => {
+  it("uses the polyfill instead of the deprecated navigator.modelContext API", async () => {
     const legacy = context();
+    const polyfill = context();
     vi.stubGlobal("navigator", { modelContext: legacy });
+    mocks.installWebMCP.mockImplementation(() => {
+      vi.stubGlobal("document", { modelContext: polyfill });
+    });
 
     const proxy = await createWebMcpProxy(options);
 
-    expect(mocks.installWebMCP).not.toHaveBeenCalled();
-    expect(legacy.registerTool).toHaveBeenCalledOnce();
+    expect(mocks.installWebMCP).toHaveBeenCalledOnce();
+    expect(polyfill.registerTool).toHaveBeenCalledOnce();
+    expect(legacy.registerTool).not.toHaveBeenCalled();
     await proxy.disconnect();
-    expect(legacy.unregisterTool).toHaveBeenCalledWith(tool.name);
+    expect(polyfill.registerTool.mock.calls[0][1].signal.aborted).toBe(true);
   });
 
   it("does not connect when the polyfill cannot install in an insecure context", async () => {
@@ -163,6 +168,6 @@ describe("WebMCP proxy registration", () => {
     expect(proxy.tools).toEqual([tool]);
     expect(console.error).toHaveBeenCalledOnce();
     await proxy.disconnect();
-    expect(native.unregisterTool).toHaveBeenCalledExactlyOnceWith(tool.name);
+    expect(native.registerTool.mock.calls[1][1].signal.aborted).toBe(true);
   });
 });

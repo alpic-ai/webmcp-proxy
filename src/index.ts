@@ -8,7 +8,6 @@ import { installWebMCP } from "@w3c/webmcp-polyfill";
 import type {
   WebMcpProxyOptions,
   WebMcpProxyInstance,
-  LegacyModelContext,
 } from "./types.js";
 
 export type {
@@ -60,19 +59,9 @@ export async function createWebMcpProxy(
     disconnect: async () => {},
   };
 
-  // The `modelContext` getter moved from `Navigator` to `Document` (WebMCP
-  // Issue 173 / PR #184). Prefer `document.modelContext` and fall back to the
-  // deprecated `navigator.modelContext` for older browsers.
-  let modelContext: LegacyModelContext | undefined =
-    typeof document === "undefined"
-      ? undefined
-      : document.modelContext ?? navigator.modelContext;
-
-  if (!modelContext) {
-    installWebMCP();
-    modelContext =
-      typeof document === "undefined" ? undefined : document.modelContext;
-  }
+  installWebMCP();
+  const modelContext =
+    typeof document === "undefined" ? undefined : document.modelContext;
 
   if (!modelContext) {
     console.warn(
@@ -117,10 +106,6 @@ export async function createWebMcpProxy(
   return {
     tools: registeredTools,
     disconnect: async () => {
-      // Backward-compat: also call unregisterTool if available (older browsers).
-      for (const tool of registeredTools) {
-        modelContext.unregisterTool?.(tool.name);
-      }
       controller.abort();
       await client.close();
     },

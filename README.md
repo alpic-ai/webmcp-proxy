@@ -4,7 +4,7 @@ Advertise your existing MCP server's tools via [WebMCP](https://github.com/webma
 
 WebMCP Proxy connects to a remote MCP server, discovers its tools, and registers them with the browser's `document.modelContext` API. When a browsing agent invokes a tool, the call is proxied to your MCP server and the result forwarded back.
 
-When WebMCP is not available natively, the proxy automatically installs the official [`@w3c/webmcp-polyfill`](https://github.com/w3c-oss/webmcp-polyfill). No extra setup is needed, including with the React and Vue integrations. Existing native implementations (including the older `navigator.modelContext` API) are preserved.
+The proxy calls the official [`@w3c/webmcp-polyfill`](https://github.com/w3c-oss/webmcp-polyfill) installer before registering tools. The installer adds `document.modelContext` when needed and preserves existing native implementations, even partial ones. No extra setup is needed, including with the React and Vue integrations. The deprecated `navigator.modelContext` API is no longer used.
 
 ## Installation
 
@@ -104,7 +104,7 @@ Starting in Chrome 153, each tool's `execute` callback receives an `AbortSignal`
 
 WebMCP Proxy uses `registerTool` rather than `provideContext` to manage tools. This means it **will not** overwrite other tools the page registers on its own — as long as those also use `registerTool`. Proxy tools and page-local tools coexist safely side by side.
 
-Tool unregistration is handled via `AbortSignal` (the recommended approach starting from Chrome 148). For backward compatibility with older browsers, `unregisterTool()` is also called when available. As of Chrome 153, unregistering a tool no longer cancels in-flight executions — cancellation goes through the per-execution `signal` instead.
+Tool unregistration is handled via the registration's `AbortSignal`, as recommended by the polyfill. Unregistering a tool does not cancel in-flight executions — cancellation goes through the per-execution `signal` instead.
 
 Only successfully registered tools are returned in `proxy.tools` and removed on disconnect. If a tool has no description, its name is used to satisfy WebMCP's non-empty description requirement.
 
@@ -141,7 +141,7 @@ This starts the Vite dev server with a built-in CORS proxy so you can connect to
 
 - The remote MCP server must support **Streamable HTTP** or **SSE** transport
 - The MCP server must allow CORS requests from the browser origin
-- Serve the page over **HTTPS or localhost** so the polyfill can install the [WebMCP API](https://github.com/webmachinelearning/webmcp). Native WebMCP is used when available, with a fallback to the deprecated `navigator.modelContext` for older browsers. Outside a supported browser context (including server-side rendering), the proxy logs a warning and becomes a no-op without contacting the MCP server.
+- Serve the page over **HTTPS or localhost** so the polyfill can install the [WebMCP API](https://github.com/webmachinelearning/webmcp). Native `document.modelContext` is used when available. Outside a supported browser context (including server-side rendering), the proxy logs a warning and becomes a no-op without contacting the MCP server.
 
 ## License
 
