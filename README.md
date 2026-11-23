@@ -116,12 +116,26 @@ On HTTPS or localhost, the polyfill lets in-page agents and browser extensions d
 const tools = await document.modelContext.getTools();
 const tool = tools.find((tool) => tool.name === "your-tool-name");
 if (tool) {
+  // Pass the original object returned by getTools(), not a copy.
   const result = await document.modelContext.executeTool(tool, { /* arguments */ });
   console.log(JSON.parse(result));
 }
 ```
 
 The polyfill enables registration, discovery, execution, and cancellation; integration with an actual browser agent still requires browser support. WebMCP is a Community Group draft, and its API may change.
+
+### Chrome 160 tool discovery changes
+
+Starting in Chrome 160.0.8173.0, `getTools()` returns browser `Tool` interface objects instead of plain dictionaries. The proxy's registration and forwarding behavior is unchanged: it does not use `getTools()` or copy browser tool objects. `proxy.tools` (and the React/Vue `onConnected` tool list) still contains the original remote MCP tool descriptions, not browser `Tool` objects. To execute a tool through WebMCP, use the object returned by `getTools()`, as shown above.
+
+If your page also reads discovered browser tools:
+
+- Read attributes explicitly. `JSON.stringify(tool)` returns `"{}"`, `{ ...tool }` copies no attributes, and `structuredClone(tool)` throws.
+- Use `tool.source ?? tool.window` while supporting Chrome versions before 160; `source` replaces `window`.
+- Handle `null` as well as `undefined` for absent `inputSchema`, `outputSchema`, and `annotations`.
+- Pass the original `Tool` to `executeTool()`. It identifies that specific registration; a replacement registered under the same name is not the same tool.
+
+The current `@w3c/webmcp-polyfill` 0.1.1 release still uses the older discovery shape when native WebMCP is absent; it leaves native implementations intact. The proxy keeps `webmcp-types` at 0.1.x to match that polyfill's dependency. Updating only the types to 0.2.x loads both versions' global declarations and causes TypeScript conflicts. Upgrade both dependencies together once a polyfill release supporting the new `Tool` interface is available ([upstream PR](https://github.com/w3c-oss/webmcp-polyfill/pull/25)).
 
 ## Demo
 

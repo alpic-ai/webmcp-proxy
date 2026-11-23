@@ -17,7 +17,7 @@ export type WebMcpProxyStatus =
   | "error";
 
 export interface WebMcpProxyInstance {
-  /** The list of MCP tools that were discovered and registered with WebMCP. */
+  /** The original MCP tool descriptions successfully registered with WebMCP, not browser WebMCP.Tool objects. */
   tools: McpTool[];
   /** Unregister all tools from WebMCP and close the MCP connection. */
   disconnect: () => Promise<void>;

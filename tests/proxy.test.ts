@@ -65,6 +65,8 @@ describe("WebMCP proxy registration", () => {
       { signal: expect.any(AbortSignal) },
     );
     expect(proxy.tools).toEqual([tool]);
+    // The public list keeps the remote MCP descriptions, not browser Tool handles.
+    expect(proxy.tools[0]).toBe(tool);
     expect(console.warn).not.toHaveBeenCalled();
     await proxy.disconnect();
     expect(polyfill.registerTool.mock.calls[0][1].signal.aborted).toBe(true);
