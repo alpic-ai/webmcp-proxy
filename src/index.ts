@@ -72,6 +72,22 @@ export async function createWebMcpProxy(
     return noop;
   }
 
+  const toolsUpdated = connectAndRegisterTools(options, modelContext);
+
+  // Signal before the first await so agents do not observe a partial tool set.
+  // Older native implementations and polyfills may not support this API yet.
+  const readinessContext = modelContext as WebMCP.ModelContext & {
+    waitForToolsUntil?: (promise: Promise<unknown>) => void;
+  };
+  readinessContext.waitForToolsUntil?.(toolsUpdated);
+
+  return toolsUpdated;
+}
+
+async function connectAndRegisterTools(
+  options: WebMcpProxyOptions,
+  modelContext: WebMCP.ModelContext,
+): Promise<WebMcpProxyInstance> {
   const client = await connectWithFallback(options.url, options.headers);
 
   const { tools: mcpTools } = await client.listTools();

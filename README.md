@@ -6,6 +6,8 @@ WebMCP Proxy connects to a remote MCP server, discovers its tools, and registers
 
 The proxy calls the official [`@w3c/webmcp-polyfill`](https://github.com/w3c-oss/webmcp-polyfill) installer before registering tools. The installer adds `document.modelContext` when needed and preserves existing native implementations, even partial ones. No extra setup is needed, including with the React and Vue integrations. The deprecated `navigator.modelContext` API is no longer used.
 
+When available, the proxy calls `document.modelContext.waitForToolsUntil()` as soon as setup starts, with a promise that settles after connecting, discovering tools, and finishing all registration attempts. This lets browsing agents avoid reading a partially registered tool set. Each proxy connection signals its own setup, including React and Vue reconnections. Browsers without this method keep working as before; supported browsers control the waiting timeout (currently 10 seconds in Chrome). Call the proxy early during page startup so the browser receives the signal before it first reads the tools.
+
 ## Installation
 
 ```bash

@@ -86,6 +86,98 @@ describe("WebMCP proxy registration", () => {
     await proxy.disconnect();
   });
 
+  it("signals readiness immediately and settles only after every registration attempt", async () => {
+    const native = { ...context(), waitForToolsUntil: vi.fn() };
+    vi.stubGlobal("document", { modelContext: native });
+    const connected = Promise.withResolvers<void>();
+    const discovered = Promise.withResolvers<{ tools: typeof tool[] }>();
+    const firstRegistered = Promise.withResolvers<void>();
+    const lastRegistered = Promise.withResolvers<void>();
+    const lastTool = { ...tool, name: "last" };
+    mocks.connect.mockReturnValue(connected.promise);
+    mocks.listTools.mockReturnValue(discovered.promise);
+    native.registerTool
+      .mockReturnValueOnce(firstRegistered.promise)
+      .mockReturnValueOnce(lastRegistered.promise);
+
+    const setup = createWebMcpProxy(options);
+
+    expect(native.waitForToolsUntil).toHaveBeenCalledOnce();
+    expect(native.waitForToolsUntil.mock.contexts[0]).toBe(native);
+    expect(mocks.listTools).not.toHaveBeenCalled();
+    expect(native.registerTool).not.toHaveBeenCalled();
+    const readiness = native.waitForToolsUntil.mock.calls[0][0];
+    const ready = vi.fn();
+    readiness.then(ready);
+
+    connected.resolve();
+    await vi.waitFor(() => expect(mocks.listTools).toHaveBeenCalledOnce());
+    expect(ready).not.toHaveBeenCalled();
+    discovered.resolve({ tools: [tool, lastTool] });
+    await vi.waitFor(() => expect(native.registerTool).toHaveBeenCalledTimes(1));
+    expect(ready).not.toHaveBeenCalled();
+
+    firstRegistered.resolve();
+    await vi.waitFor(() => expect(native.registerTool).toHaveBeenCalledTimes(2));
+    expect(ready).not.toHaveBeenCalled();
+    lastRegistered.reject(new Error("Already registered"));
+    const proxy = await setup;
+
+    expect(await readiness).toBe(proxy);
+    expect(ready).toHaveBeenCalledOnce();
+    expect(proxy.tools).toEqual([tool]);
+    expect(console.error).toHaveBeenCalledOnce();
+    await proxy.disconnect();
+  });
+
+  it("signals each proxy setup separately, including when the polyfill supplies the API", async () => {
+    const polyfill = { ...context(), waitForToolsUntil: vi.fn() };
+    mocks.installWebMCP.mockImplementation(() => {
+      vi.stubGlobal("document", { modelContext: polyfill });
+    });
+
+    const proxies = await Promise.all([
+      createWebMcpProxy(options),
+      createWebMcpProxy(options),
+    ]);
+
+    expect(polyfill.waitForToolsUntil).toHaveBeenCalledTimes(2);
+    const promises = polyfill.waitForToolsUntil.mock.calls.map(([promise]) => promise);
+    expect(promises[0]).not.toBe(promises[1]);
+    expect(await Promise.all(promises)).toEqual(proxies);
+    await Promise.all(proxies.map((proxy) => proxy.disconnect()));
+  });
+
+  it.each(["connection", "discovery"])("settles the readiness promise when %s fails", async (stage) => {
+    const native = { ...context(), waitForToolsUntil: vi.fn() };
+    vi.stubGlobal("document", { modelContext: native });
+    const error = new Error("Setup failed");
+    if (stage === "connection") mocks.connect.mockRejectedValue(error);
+    else mocks.listTools.mockRejectedValue(error);
+
+    const setup = createWebMcpProxy(options);
+    const readiness = native.waitForToolsUntil.mock.calls[0][0];
+
+    await Promise.all([
+      expect(setup).rejects.toBe(error),
+      expect(readiness).rejects.toBe(error),
+    ]);
+    expect(native.registerTool).not.toHaveBeenCalled();
+  });
+
+  it("settles readiness when the server exposes no tools", async () => {
+    const native = { ...context(), waitForToolsUntil: vi.fn() };
+    vi.stubGlobal("document", { modelContext: native });
+    mocks.listTools.mockResolvedValue({ tools: [] });
+
+    const proxy = await createWebMcpProxy(options);
+
+    expect(await native.waitForToolsUntil.mock.calls[0][0]).toBe(proxy);
+    expect(proxy.tools).toEqual([]);
+    expect(native.registerTool).not.toHaveBeenCalled();
+    await proxy.disconnect();
+  });
+
   it("uses the polyfill instead of the deprecated navigator.modelContext API", async () => {
     const legacy = context();
     const polyfill = context();
