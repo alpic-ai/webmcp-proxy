@@ -5,6 +5,7 @@ import {
   type Transport,
 } from "@modelcontextprotocol/client";
 import { installWebMCP } from "@w3c/webmcp-polyfill";
+import type { ModelContextWithReadiness } from "./webmcp-types.js";
 import type {
   WebMcpProxyOptions,
   WebMcpProxyInstance,
@@ -76,9 +77,7 @@ export async function createWebMcpProxy(
 
   // Signal before the first await so agents do not observe a partial tool set.
   // Older native implementations and polyfills may not support this API yet.
-  const readinessContext = modelContext as WebMCP.ModelContext & {
-    waitForToolsUntil?: (promise: Promise<unknown>) => void;
-  };
+  const readinessContext = modelContext as ModelContextWithReadiness;
   readinessContext.waitForToolsUntil?.(toolsUpdated);
 
   return toolsUpdated;
